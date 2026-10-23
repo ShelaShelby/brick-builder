@@ -104,6 +104,11 @@ pub fn manual_pdf(model: &Model, ins: &Instructions, progress: Option<&AtomicUsi
     let view = View::default();
     let title = if model.name.is_empty() { "My build".to_string() } else { model.name.clone() };
 
+    // Frame on the bricks (not the whole baseplate) so details stay big.
+    let mut frame: Vec<_> = bricks.iter().filter(|b| b.part != Part::Baseplate).copied().collect();
+    if frame.len() < 3 {
+        frame = bricks.clone();
+    }
     // Step pictures, rendered in parallel (limited pool to bound memory).
     let pool = rayon::ThreadPoolBuilder::new().num_threads(4).build().expect("thread pool");
     let pictures: Vec<(u32, u32, Vec<u8>)> = pool.install(|| {
@@ -123,7 +128,7 @@ pub fn manual_pdf(model: &Model, ins: &Instructions, progress: Option<&AtomicUsi
                         }
                     })
                     .collect();
-                let img = renderer.render(bricks, &looks, bricks, img_w, img_h, &view);
+                let img = renderer.render(bricks, &looks, &frame, img_w, img_h, &view);
                 if let Some(p) = progress {
                     p.fetch_add(1, Ordering::Relaxed);
                 }

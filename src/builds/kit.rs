@@ -231,23 +231,6 @@ pub fn flowers(b: &mut Builder, x: i32, z: i32, y: i32, c: u8) {
     b.part(Part::Round { d: 2 }, x, y + 1, z, 0, c);
 }
 
-/// Paved area of 2x2 tiles (sizes must be even).
-pub fn tiles(b: &mut Builder, x0: i32, z0: i32, x1: i32, z1: i32, y: i32, c: u8, alt: Option<u8>) {
-    let mut x = x0;
-    while x + 1 < x1 {
-        let mut z = z0;
-        while z + 1 < z1 {
-            let cc = match alt {
-                Some(a) if ((x - x0) / 2 + (z - z0) / 2) % 2 == 1 => a,
-                _ => c,
-            };
-            b.part(Part::Tile { d: 2 }, x, y, z, 0, cc);
-            z += 2;
-        }
-        x += 2;
-    }
-}
-
 /// Crenellations on top of a wall ring: two-stud merlons with gaps.
 pub fn battlements(b: &mut Builder, x0: i32, z0: i32, x1: i32, z1: i32, y: i32, color: u8) {
     let edge = |x: i32, z: i32| (x == x0 || x == x1 - 1 || z == z0 || z == z1 - 1) && x >= x0 && x < x1 && z >= z0 && z < z1;

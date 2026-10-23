@@ -18,8 +18,10 @@ pub enum Look {
 pub struct Image {
     pub width: u32,
     pub height: u32,
-    /// RGB, row-major.
+    /// RGB, row-major, over the background colour.
     pub rgb: Vec<u8>,
+    /// RGBA with premultiplied alpha and a transparent background.
+    pub rgba_premul: Vec<u8>,
 }
 
 #[derive(Clone, Copy)]
@@ -187,7 +189,6 @@ impl Renderer {
                 let i = y * w + x;
                 let id = ids[i];
                 let mut edge = false;
-                let mut nearest = i;
                 for (dx, dy) in [(1i32, 0i32), (0, 1), (-1, 0), (0, -1)] {
                     let nx = x as i32 + dx;
                     let ny = y as i32 + dy;
@@ -199,7 +200,6 @@ impl Renderer {
                         // Draw the line on the nearer of the two pixels.
                         if zbuf[i] <= zbuf[j] {
                             edge = true;
-                            nearest = i;
                         }
                     }
                 }
@@ -209,7 +209,7 @@ impl Renderer {
                         .map(|_| looks.get((id / 64) as usize).copied() == Some(Look::Dim))
                         .unwrap_or(false);
                     let k = if dim { 0.78 } else { 0.25 };
-                    let c = col[nearest];
+                    let c = col[i];
                     out[i] = [c[0] * k, c[1] * k, c[2] * k];
                 }
             }
@@ -217,25 +217,38 @@ impl Renderer {
 
         // Downsample.
         let mut rgb = vec![0u8; (width * height * 3) as usize];
+        let mut rgba_premul = vec![0u8; (width * height * 4) as usize];
         let inv = 1.0 / (ss * ss) as f32;
         for y in 0..height as usize {
             for x in 0..width as usize {
                 let mut acc = [0.0f32; 3];
+                let mut fg = [0.0f32; 4];
                 for sy in 0..ss as usize {
                     for sx in 0..ss as usize {
-                        let c = out[(y * ss as usize + sy) * w + x * ss as usize + sx];
+                        let i = (y * ss as usize + sy) * w + x * ss as usize + sx;
+                        let c = out[i];
                         acc[0] += c[0];
                         acc[1] += c[1];
                         acc[2] += c[2];
+                        if ids[i] != u32::MAX {
+                            fg[0] += c[0];
+                            fg[1] += c[1];
+                            fg[2] += c[2];
+                            fg[3] += 1.0;
+                        }
                     }
                 }
                 let o = (y * width as usize + x) * 3;
                 for k in 0..3 {
                     rgb[o + k] = (acc[k] * inv * 255.0).clamp(0.0, 255.0) as u8;
                 }
+                let o = (y * width as usize + x) * 4;
+                for k in 0..4 {
+                    rgba_premul[o + k] = (fg[k] * inv * 255.0).clamp(0.0, 255.0) as u8;
+                }
             }
         }
-        Image { width, height, rgb }
+        Image { width, height, rgb, rgba_premul }
     }
 
     /// Icon of a single part in a colour.
