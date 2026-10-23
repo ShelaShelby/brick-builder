@@ -1,5 +1,21 @@
 # Brick Builder
 
+## ⬇️ Download (Windows)
+
+### [**Download Brick-Builder-windows.zip**](https://github.com/ShelaShelby/brick-builder/releases/latest/download/Brick-Builder-windows.zip)
+
+1. **Download** the zip with the link above.
+2. **Unzip** it (right-click the file and choose *Extract All...*).
+3. **Double-click `brick-builder.exe`** in the unzipped `Brick-Builder` folder.
+
+Windows may show a blue SmartScreen box saying *"Windows protected your PC"*,
+because the app is not signed. Click **More info**, then **Run anyway**. You
+only need to do this once. Nothing else needs to be installed.
+
+All versions are listed on the [releases page](https://github.com/ShelaShelby/brick-builder/releases/latest).
+
+---
+
 A native desktop app for building with toy bricks in 3D. Build freely on a big
 baseplate, open one of five ready-made builds, and follow auto-generated
 step-by-step instructions (also exportable as PDF).
@@ -9,7 +25,7 @@ Written in Rust with [Bevy](https://bevyengine.org) and
 code, so there are no asset files. The designs are original, generic brick
 shapes.
 
-## Run
+## Run from source (developers)
 
 Requirements: Rust (stable) and, on Windows, the Visual Studio C++ Build Tools.
 

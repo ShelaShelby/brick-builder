@@ -1,0 +1,53 @@
+name: Windows release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test
+        run: cargo test --release
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path Brick-Builder | Out-Null
+          Copy-Item target/release/brick-builder.exe Brick-Builder/
+          Copy-Item packaging/README.txt Brick-Builder/
+          if (Test-Path assets) { Copy-Item -Recurse assets Brick-Builder/ }
+          Compress-Archive -Path Brick-Builder -DestinationPath Brick-Builder-windows.zip -Force
+          Get-Item Brick-Builder-windows.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.${{ github.run_number }}
+          name: Brick Builder v0.1.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: Brick-Builder-windows.zip
+          body: |
+            Download **Brick-Builder-windows.zip** below, unzip it and double-click `brick-builder.exe`.
+            If Windows shows "Windows protected your PC", click **More info** then **Run anyway**.
+
+            Built from commit ${{ github.sha }}.
